@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Installs the amazon-design-doc skill into whichever agent tools a project uses.
 // ponytail: plain fs copy + one flattened markdown per tool. No deps, no template engine.
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync, cpSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync, cpSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -148,4 +148,15 @@ export function main(argv = process.argv.slice(2)) {
   }
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) main();
+// npm and npx invoke the bin through a `.bin` symlink, so argv[1] is the link and
+// import.meta.url is its target. Compare resolved paths or the CLI silently does nothing.
+function isEntrypoint() {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+
+if (isEntrypoint()) main();

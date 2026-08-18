@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, existsSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, existsSync, writeFileSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -43,4 +43,16 @@ test('install writes each target to its documented path', () => {
 test('unknown target fails loudly', () => {
   const dir = mkdtempSync(join(tmpdir(), 'add-'));
   assert.throws(() => run(['install', 'nope'], dir), /Command failed/);
+});
+
+test('runs when invoked through a symlink, as npm and npx do', () => {
+  // Regression: npx calls node_modules/.bin/amazon-design-doc, a symlink to bin/cli.js.
+  const dir = mkdtempSync(join(tmpdir(), 'add-bin-'));
+  const link = join(dir, 'amazon-design-doc');
+  symlinkSync(CLI, link);
+  const viaLink = (args) =>
+    execFileSync(process.execPath, [link, ...args], { cwd: dir, encoding: 'utf8' });
+  assert.match(viaLink(['list']), /claude/, 'CLI must produce output when run via symlink');
+  viaLink(['install', 'cursor']);
+  assert.ok(existsSync(join(dir, '.cursor/rules/amazon-design-doc.mdc')));
 });

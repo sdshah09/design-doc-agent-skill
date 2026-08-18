@@ -7,7 +7,8 @@ import { execFileSync } from 'node:child_process';
 import { flatten, spliceBlock, TARGETS } from '../bin/cli.js';
 
 const CLI = new URL('../bin/cli.js', import.meta.url).pathname;
-const run = (args, cwd) => execFileSync(process.execPath, [CLI, ...args], { cwd, encoding: 'utf8' });
+const run = (args, cwd, env) =>
+  execFileSync(process.execPath, [CLI, ...args], { cwd, encoding: 'utf8', env: { ...process.env, ...env } });
 
 test('flatten inlines every reference and drops frontmatter', () => {
   const md = flatten();
@@ -29,13 +30,22 @@ test('spliceBlock appends once and replaces on reinstall', () => {
 
 test('install writes each target to its documented path', () => {
   const dir = mkdtempSync(join(tmpdir(), 'add-'));
+  const codexHome = mkdtempSync(join(tmpdir(), 'codex-'));
   writeFileSync(join(dir, 'AGENTS.md'), '# House rules\n');
-  run(['install', 'all'], dir);
+  run(['install', 'all'], dir, { CODEX_HOME: codexHome });
   for (const t of Object.values(TARGETS)) {
-    assert.ok(existsSync(join(dir, t.dir || t.file)), `${t.dir || t.file} exists`);
+    const rel = t.dir || t.file;
+    if (rel.startsWith('/') || rel.startsWith('~')) continue; // home-scoped, asserted below
+    assert.ok(existsSync(join(dir, rel)), `${rel} exists`);
   }
+  // Regression: Codex reads $CODEX_HOME/skills only — a project-relative path is never loaded.
+  assert.ok(
+    existsSync(join(codexHome, 'skills/amazon-design-doc/SKILL.md')),
+    'codex skill lands in $CODEX_HOME/skills'
+  );
+  assert.ok(!existsSync(join(dir, '.codex')), 'nothing written to a project-level .codex');
   assert.ok(existsSync(join(dir, '.claude/skills/amazon-design-doc/references/template.md')));
-  assert.match(readFileSync(join(dir, '.cursor/rules/amazon-design-doc.mdc'), 'utf8'), /^---\ndescription:/);
+  assert.ok(existsSync(join(dir, '.cursor/skills/amazon-design-doc/references/template.md')));
   assert.match(readFileSync(join(dir, 'AGENTS.md'), 'utf8'), /# House rules/);
   assert.match(readFileSync(join(dir, '.gemini/commands/design-doc.toml'), 'utf8'), /^prompt = """/m);
 });
@@ -54,5 +64,5 @@ test('runs when invoked through a symlink, as npm and npx do', () => {
     execFileSync(process.execPath, [link, ...args], { cwd: dir, encoding: 'utf8' });
   assert.match(viaLink(['list']), /claude/, 'CLI must produce output when run via symlink');
   viaLink(['install', 'cursor']);
-  assert.ok(existsSync(join(dir, '.cursor/rules/amazon-design-doc.mdc')));
+  assert.ok(existsSync(join(dir, '.cursor/skills/amazon-design-doc/SKILL.md')));
 });

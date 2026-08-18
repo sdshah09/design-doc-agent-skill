@@ -20,14 +20,17 @@ export const TARGETS = {
     global: `~/.claude/skills/${NAME}`,
   },
   cursor: {
-    label: 'Cursor rules',
-    file: `.cursor/rules/${NAME}.mdc`,
-    header: `---\ndescription: ${DESC}\nalwaysApply: false\n---\n\n`,
+    // Cursor has native skills — its own manifest lists builtins including `migrate-to-skills`,
+    // which converts legacy .cursor/rules into this layout. Same SKILL.md format as Claude.
+    label: 'Cursor skills',
+    dir: `.cursor/skills/${NAME}`,
+    global: `~/.cursor/skills/${NAME}`,
   },
   codex: {
-    label: 'OpenAI Codex prompt',
-    file: `.codex/prompts/design-doc.md`,
-    global: `~/.codex/prompts/design-doc.md`,
+    // Codex only reads skills from $CODEX_HOME/skills, never from the project, so this target
+    // is home-scoped with or without --global. Same SKILL.md format as Claude.
+    label: 'OpenAI Codex skills (always installed to $CODEX_HOME)',
+    dir: `${process.env.CODEX_HOME || '~/.codex'}/skills/${NAME}`,
   },
   copilot: {
     label: 'GitHub Copilot instructions',
@@ -114,7 +117,7 @@ ${Object.entries(TARGETS)
   all        every target above
 
 Flags:
-  --global   install to your home directory instead of this project (claude, codex)
+  --global   install to your home directory instead of this project (claude, cursor)
 `;
 
 export function main(argv = process.argv.slice(2)) {

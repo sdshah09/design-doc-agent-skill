@@ -1,0 +1,353 @@
+---
+description: Write, review, or improve a technical design doc, RFC, or tech spec using the Amazon design doc format.
+alwaysApply: false
+---
+
+# Write Design Docs like Amazon
+
+Based on [Eric Clemmons' template](https://ericclemmons.com/blog/write-design-docs-like-amazon/), written from
+experience authoring design docs at AWS Amplify.
+
+## When to use this
+
+Writing a new design doc, RFC, or tech spec. Reviewing someone else's. Rewriting a doc that got
+"looks fine" instead of real feedback — that usually means it was too vague to argue with.
+
+Not for: READMEs, API reference docs, postmortems, or PRDs.
+
+## The four writing rules
+
+These matter more than the section list. Enforce them on every draft, including your own.
+
+1. **6-8 pages of primary content.** Everything else goes in the Appendix. A doc nobody finishes
+   is a doc nobody approves.
+2. **No weasel words.** "Significantly faster", "many customers", "soon", "should scale" are
+   banned. Use numbers, percentages, dates. If the data doesn't exist, go get it before writing
+   the sentence.
+3. **Data-point in the body, methodology in the Appendix.** The reader gets "TTFB drops from
+   200ms to 50ms", not the benchmark harness.
+4. **Prose, not bullets.** Bullets hide the reasoning that connects two facts. Write paragraphs
+   and let the argument show. Reserve lists for genuinely enumerable things: glossaries,
+   dependencies, components.
+
+## Document structure
+
+Write these sections, in this order. Skip one only when it genuinely does not apply, and say so
+rather than deleting the heading silently — a missing `Security` or `Breaking changes` reads as an
+oversight, not a decision.
+
+1. **Problem statement** — an abstract that defines the problem, summarizes the solution, states
+   the goal. Two paragraphs.
+2. **Glossary** — terms, acronyms, abbreviations. The doc outlives the meeting.
+3. **Use cases** — impact and business value, from the customer's perspective. Representative,
+   not exhaustive.
+4. **Breaking changes** — 404s, API shape changes, prop changes, nullable turning non-nullable,
+   compilation breaks, perf regressions, signature changes, E2E-breaking UI changes, and the
+   workarounds customers built for bugs you're about to fix.
+5. **Success criteria** — what you'll measure and quantify, relative *and* absolute.
+6. **Proposed design** — *what* the solution does. True regardless of implementation.
+7. **Technical design** — *how*. Diagrams, algorithms, data structures, interfaces. Happy path
+   first; edge cases only where they shape the design. Link to the original of every diagram.
+8. **Components** — the humans, systems, processes, and components interacting, C4-model style.
+9. **Dependencies** — external and sibling systems you rely on. Each is a risk for the section below.
+10. **Monitoring** — the technical counterpart to success criteria, for health and stability.
+11. **New APIs or behaviors** — public-facing changes only. These need stakeholder buy-in.
+12. **Pros & cons** — of adopting *and* of not adopting. Development cost, maintenance burden,
+    operational load, and whether this is a 1-way or 2-way door.
+13. **Major risks & mitigations** — dependencies outside your control, unfamiliar technology,
+    unvalidated assumptions, and the technical debt you're taking on plus how you'll repay it.
+14. **Security** — surface area changes, new data gathered or stored and its blast radius,
+    secure-by-default or not. Pairs with a separate security review.
+15. **Scope** — the minimum work that solves the use cases, including scale and SLA. Don't boil
+    the ocean.
+16. **Out of scope** — incremental delivery and the corners you looked around but won't block on.
+17. **Alternatives considered** — each with pros & cons and reasons discarded. "Do nothing"
+    **must** be addressed.
+18. **FAQ** — a smell; see below.
+19. **Open questions & feedback** — items from the design review.
+20. **Appendix** — methodology, sources, prior art, attachments, and every graph.
+
+## How to write one
+
+Work backwards from the customer, not forwards from the code. Draft in this order — it is not the
+reading order, but it is the order that keeps the doc honest:
+
+1. **Problem statement first**, before any solution exists in your head. If you can't state the
+   problem in two paragraphs with numbers in them, you don't understand it yet.
+2. **Use cases next**, phrased as business value and written from the customer's point of view.
+   A representative handful, not an exhaustive edge-case sweep.
+3. **Success criteria before the design.** Deciding what you'll measure before you decide what
+   you'll build is what stops the design from justifying itself. Every metric needs a
+   directional stat and a before/after: "adoption doubles" is meaningless until you learn it
+   went from 1 user to 2.
+4. **Then proposed design (what) and technical design (how)**, kept separate on purpose. The
+   proposed design should survive a change of implementation.
+5. **Then the adversarial sections** — breaking changes, pros & cons, risks, security,
+   alternatives. Write these as if a skeptical senior engineer wrote them, because one is about
+   to read them.
+
+Read `references/template.md` for the fill-in-the-blanks version of the structure above, and
+`references/examples.md` for worked examples of the sections people get wrong.
+
+For diagrams, reach for [Excalidraw](https://excalidraw.com/), [tldraw](https://www.tldraw.com/),
+[Whimsical](https://whimsical.com/), or [Stately](https://stately.ai/), and link the original
+file from the doc — you will want to edit it again.
+
+## Reviewing a doc
+
+Score against this and report what's missing, quoting the offending lines:
+
+- Does the problem statement stand alone without the solution?
+- Is every claim a number, a date, or a percentage? Flag each weasel word.
+- Do success criteria have both relative and absolute values?
+- Are breaking changes listed, including the workarounds customers built that will now break?
+- Is "do nothing" addressed in alternatives considered? It **must** be.
+- Is each decision marked as a 1-way or 2-way door?
+- Are bullet points doing work that prose should do?
+
+`FAQ` is a smell. If a question is common enough to FAQ, the answer belongs inline where the
+question arises. Say so when you see one.
+
+## Open questions from review
+
+Record every item raised in the design review in `Open Questions & Feedback`. Address it by
+updating the body of the document, then strike the original question through rather than
+deleting it — the strikethrough is the receipt that it was handled.
+
+---
+
+# Worked Examples
+
+The sections people get wrong, with examples adapted from the AWS Amplify Authenticator relaunch.
+
+## Problem Statement
+
+> The existing `@aws-amplify/ui-*` packages successfully reduced the level of effort to create
+> cross-framework components for web, but led to certain technical limitations (fine-grained
+> customizability of UI styling, password manager support) that prevented customers from using the
+> `Authenticator` in production apps.
+>
+> The next major release of the `Authenticator` resolves long-standing customer issues with the
+> existing `@aws-amplify/ui-*` packages and creates a foundation to ensure cross-framework (Angular,
+> React, React Native, Vue) and cross-platform (Android, iOS, Flutter) feature parity and stability.
+
+Note what it does: names the prior art, names the specific limitations, names who was blocked and
+from what. No adjectives doing load-bearing work.
+
+## Glossary
+
+> - ***SSG*** — Static Site Generation. The page HTML is generated at *build time*, rather than
+>   per-request.
+> - ***Next.js*** — React framework developed by Vercel for full-stack web applications.
+
+## Use cases
+
+Show the customer's code, not yours:
+
+> Customers can wrap their React pages in authentication with zero configuration of their
+> underlying backend:
+>
+> ```jsx
+> import { Authenticator, useAuthenticator } from "@aws-amplify/ui-react"
+>
+> export default function App() {
+>   const auth = useAuthenticator();
+>
+>   if (auth.state !== 'AUTHENTICATED') {
+>     return <Authenticator />
+>   }
+>
+>   return (
+>     <>
+>       <h1>Welcome {auth.user.username}!</h1>
+>       <button onClick={auth.signOut}>Sign out</button>
+>     </>
+>   )
+> }
+> ```
+
+## Success criteria
+
+Each line has a direction and a before/after:
+
+> - ***Performance*** — Time-to-first-byte (TTFB) will improve 4x, from 200ms to 50ms.
+> - ***Cost*** — We'll reduce our DataDog bill by $12,000 each month, from $30,000 to $18,000.
+> - ***Adoption*** — By Q2, 25% of our users (4,250) will be using this new version, based on NPM
+>   downloads.
+> - ***Stability*** — Our session error percentage will drop from 3% to 1%, eliminating crashes in
+>   2,000 sessions a month.
+
+"Doubling customers" sounds huge until you find out it's from 1 to 2. That is why the absolute
+number is mandatory alongside the relative one.
+
+## Components
+
+> - ***Studio*** — The primary interface for UX Designers. It consumes UI Codegen as a dependency.
+> - ***CLI*** — The primary interface for App Developers. It consumes UI Codegen as a dependency.
+> - ***GitHub*** — The source control system-of-record for the open-source UI Codegen package.
+> - ***Actions*** — The CI/CD system for building, testing, and deploying the UI Codegen package.
+> - ***NPM*** — The primary distribution channel for the open-source UI Codegen package.
+
+## Dependencies
+
+> - ***LaunchDarkly*** — Feature flag service responsible for rolling this feature out to users.
+
+## New APIs or behaviors
+
+> - Queues go from delivering messages *exactly once* to *at least once*.
+> - Introducing an `experimental: {...}` configuration object.
+
+## Scope
+
+> - Customers will be able to upgrade their dependency to this version without changing any code.
+> - This API will use existing, local LLM models, without affecting our OpenAI quota.
+
+## Out of scope
+
+> - The API will not support batch editing, but is planned for Q2.
+> - There are no changes to existing user Roles & Permissions.
+
+## Weasel words to strike
+
+| Instead of | Write |
+| --- | --- |
+| significantly faster | 4x faster, 200ms to 50ms |
+| many customers | 4,250 customers (25% of monthly actives) |
+| soon / in the near future | by 2026-Q2 |
+| should scale | sustains 12k RPS at p99 < 80ms |
+| more reliable | error rate drops from 3% to 1% |
+| minimal effort | one dependency bump, no code changes |
+
+## Design tools worth using
+
+[Excalidraw](https://excalidraw.com/), [tldraw](https://www.tldraw.com/),
+[Whimsical](https://whimsical.com/), [Stately](https://stately.ai/), Keynote.
+Link to the original file from the doc, always.
+
+---
+
+# Design Doc Template
+
+Copy this, fill it in, delete the guidance. Adjust to fit — this is a thorough template, not a
+compliance checklist. Aim for 6-8 pages of primary content; push the rest to the Appendix.
+
+---
+
+## Problem Statement
+
+An abstract of the whole document: define the problem, summarize the solution, state the goal.
+Two paragraphs. Someone who reads only this section should be able to repeat back what you're
+doing and why.
+
+## Glossary
+
+Terms, acronyms, and abbreviations. This doc outlives the meeting it was written for — help the
+reader who finds it in a year, including you.
+
+## Use cases
+
+Written as impact or business value, not technical outcomes. Work backwards from the customer and
+show their perspective — code samples of the API they'd write are excellent here. Representative,
+not exhaustive.
+
+## Breaking changes
+
+Does this break customers, services, or anything else? Consider: 404'd URLs, HTTP request/response
+shape changes, component prop changes, a nullable property becoming non-nullable, dependency
+upgrades that break compilation, performance regressions, function signature changes, UI structure
+that breaks E2E tests, and buggy behavior customers built workarounds for — those workarounds will
+break.
+
+## Success criteria
+
+What you'll measure and **quantify** to show the problem is solved. Every metric gets a
+directional stat and a before/after pair, in relative *and* absolute terms.
+
+## Proposed design
+
+*What* the solution does. Ideas, concepts, and tenets that stay true regardless of implementation.
+The key features live here; the mechanism lives in the next section.
+
+## Technical design
+
+*How* you achieve it. Architecture diagrams, algorithms, data structures, interfaces. Describe the
+happy path; include edge cases only when they shape the design. Link to the original source of
+every diagram — you will want to edit it again.
+
+## Components
+
+Enumerate the humans, systems, processes, and components interacting here, C4-model style. Name
+each one and state what it is and what it depends on.
+
+## Dependencies
+
+External or sibling systems this design relies on. Each one is a risk to be mitigated below.
+
+## Monitoring
+
+The technical counterpart to success criteria: how you'll track the health and stability of the
+solution in production.
+
+## New APIs or behaviors
+
+*Public-facing* changes only — anything another service or person can depend on. These need
+broader buy-in from stakeholders and senior technical staff, so surface them explicitly.
+
+## Pros & cons
+
+Show you've considered the impact of adopting this *and* of not adopting it. Does the development
+cost delay other initiatives? Is it easy or difficult to maintain, and does that affect headcount?
+Does it add complexity to on-call and operational load? Is this a 1-way or 2-way door decision?
+
+## Major risks & mitigations
+
+Go deeper on dependencies, cons, and components. Which dependencies are outside your control, and
+what happens during their outage? Does this introduce a new technology or pattern, and how will
+the team gain experience with it? Which assumptions are unvalidated, and what breaks if they're
+wrong? What technical debt does this create, and how will you pay it off? (Feature flags are
+excellent fodder here.)
+
+## Security
+
+A good design comes with a separate security review. Does the exposed surface area change? Is new
+data gathered or stored — what type, stored where, and what's the blast radius if it leaks? Is the
+design secure-by-default, or does it require extra steps to harden?
+
+## Scope
+
+The exact features and functionality required to deploy, including scale and SLA. Find the minimum
+work that solves the use cases above without boiling the ocean.
+
+## Out of scope
+
+Incremental delivery and the corners you looked around but chose not to block on. Say when each
+one lands, if it lands.
+
+## Alternatives considered
+
+"Do nothing" is an option that **must** be addressed. Include the alternatives that came close but
+fell short — those are what justify the cost of writing this document and building the thing.
+
+### Alternative #1
+
+**Pros & cons** — tradeoffs and benefits, concisely.
+
+**Reasons discarded** — why not this? What would have to change (release cadence, team structure,
+support, expertise) to make it viable?
+
+## FAQ
+
+Questions that trend during pre-review feedback. Treat this section as a smell: don't bury the
+lede. If people keep asking, answer it up top where the question arises.
+
+## Open Questions & Feedback
+
+Items from the design review. Every item must be addressed by updating the document. Keep the
+original question and strike it through once resolved:
+
+- ~~Missing Pros & Cons~~
+- Have you considered *this other solution*?
+
+## Appendix
+
+Methodology and sources behind your data, prior art, resources, and attachments.

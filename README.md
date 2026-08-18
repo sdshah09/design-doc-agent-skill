@@ -32,12 +32,15 @@ npx amazon-design-doc list                     # what targets exist
 | Target | Path |
 | --- | --- |
 | `claude` | `.claude/skills/amazon-design-doc/` — or `~/.claude/skills/` with `--global` |
-| `cursor` | `.cursor/rules/amazon-design-doc.mdc` |
-| `codex` | `.codex/prompts/design-doc.md` — or `~/.codex/prompts/` with `--global` |
+| `cursor` | `.cursor/skills/amazon-design-doc/` — or `~/.cursor/skills/` with `--global` |
+| `codex` | `~/.codex/skills/amazon-design-doc/` — always home-scoped, honours `$CODEX_HOME` |
 | `copilot` | `.github/instructions/amazon-design-doc.instructions.md` |
 | `windsurf` | `.windsurf/rules/amazon-design-doc.md` |
 | `gemini` | `.gemini/commands/design-doc.toml` |
 | `agents` | `AGENTS.md`, spliced between markers so reinstalls replace rather than duplicate |
+
+Codex only ever loads skills from `$CODEX_HOME/skills`, so that target ignores `--global` and
+always installs there. Everything else is project-local by default.
 
 Directory-based tools get the skill verbatim, so its references load only when needed.
 Single-file tools get one flattened document generated from the same source at install time.

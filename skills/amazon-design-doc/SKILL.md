@@ -30,6 +30,43 @@ These matter more than the section list. Enforce them on every draft, including 
    and let the argument show. Reserve lists for genuinely enumerable things: glossaries,
    dependencies, components.
 
+## Document structure
+
+Write these sections, in this order. Skip one only when it genuinely does not apply, and say so
+rather than deleting the heading silently — a missing `Security` or `Breaking changes` reads as an
+oversight, not a decision.
+
+1. **Problem statement** — an abstract that defines the problem, summarizes the solution, states
+   the goal. Two paragraphs.
+2. **Glossary** — terms, acronyms, abbreviations. The doc outlives the meeting.
+3. **Use cases** — impact and business value, from the customer's perspective. Representative,
+   not exhaustive.
+4. **Breaking changes** — 404s, API shape changes, prop changes, nullable turning non-nullable,
+   compilation breaks, perf regressions, signature changes, E2E-breaking UI changes, and the
+   workarounds customers built for bugs you're about to fix.
+5. **Success criteria** — what you'll measure and quantify, relative *and* absolute.
+6. **Proposed design** — *what* the solution does. True regardless of implementation.
+7. **Technical design** — *how*. Diagrams, algorithms, data structures, interfaces. Happy path
+   first; edge cases only where they shape the design. Link to the original of every diagram.
+8. **Components** — the humans, systems, processes, and components interacting, C4-model style.
+9. **Dependencies** — external and sibling systems you rely on. Each is a risk for the section below.
+10. **Monitoring** — the technical counterpart to success criteria, for health and stability.
+11. **New APIs or behaviors** — public-facing changes only. These need stakeholder buy-in.
+12. **Pros & cons** — of adopting *and* of not adopting. Development cost, maintenance burden,
+    operational load, and whether this is a 1-way or 2-way door.
+13. **Major risks & mitigations** — dependencies outside your control, unfamiliar technology,
+    unvalidated assumptions, and the technical debt you're taking on plus how you'll repay it.
+14. **Security** — surface area changes, new data gathered or stored and its blast radius,
+    secure-by-default or not. Pairs with a separate security review.
+15. **Scope** — the minimum work that solves the use cases, including scale and SLA. Don't boil
+    the ocean.
+16. **Out of scope** — incremental delivery and the corners you looked around but won't block on.
+17. **Alternatives considered** — each with pros & cons and reasons discarded. "Do nothing"
+    **must** be addressed.
+18. **FAQ** — a smell; see below.
+19. **Open questions & feedback** — items from the design review.
+20. **Appendix** — methodology, sources, prior art, attachments, and every graph.
+
 ## How to write one
 
 Work backwards from the customer, not forwards from the code. Draft in this order — it is not the
@@ -49,8 +86,12 @@ reading order, but it is the order that keeps the doc honest:
    alternatives. Write these as if a skeptical senior engineer wrote them, because one is about
    to read them.
 
-Read `references/template.md` for the full section-by-section template to fill in, and
+Read `references/template.md` for the fill-in-the-blanks version of the structure above, and
 `references/examples.md` for worked examples of the sections people get wrong.
+
+For diagrams, reach for [Excalidraw](https://excalidraw.com/), [tldraw](https://www.tldraw.com/),
+[Whimsical](https://whimsical.com/), or [Stately](https://stately.ai/), and link the original
+file from the doc — you will want to edit it again.
 
 ## Reviewing a doc
 

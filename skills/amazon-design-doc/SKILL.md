@@ -1,6 +1,6 @@
 ---
 name: amazon-design-doc
-description: Use when writing, reviewing, or improving a technical design doc, RFC, tech spec, architecture proposal, or one-pager - applies the Amazon design doc format (problem statement, use cases, success criteria, technical design, risks, alternatives considered) and its prose-over-bullets, no-weasel-words writing rules.
+description: Use when writing, reviewing, or improving a technical design doc, RFC, tech spec, architecture proposal, or one-pager - applies the Amazon design doc format (problem statement, use cases, success criteria, technical design, API and data schema, risks, alternatives considered) and its prose-over-bullets, no-weasel-words writing rules.
 ---
 
 # Write Design Docs like Amazon
@@ -48,24 +48,28 @@ oversight, not a decision.
 6. **Proposed design** — *what* the solution does. True regardless of implementation.
 7. **Technical design** — *how*. Diagrams, algorithms, data structures, interfaces. Happy path
    first; edge cases only where they shape the design. Link to the original of every diagram.
-8. **Components** — the humans, systems, processes, and components interacting, C4-model style.
-9. **Dependencies** — external and sibling systems you rely on. Each is a risk for the section below.
-10. **Monitoring** — the technical counterpart to success criteria, for health and stability.
-11. **New APIs or behaviors** — public-facing changes only. These need stakeholder buy-in.
-12. **Pros & cons** — of adopting *and* of not adopting. Development cost, maintenance burden,
+8. **API & data schema** — the contracts. Request/response shapes with types and nullability,
+   the entities you store with their fields, keys, and indexes, and the migration and versioning
+   story for both. Every field that is optional, nullable, or defaulted says so here.
+9. **Components** — the humans, systems, processes, and components interacting, C4-model style.
+10. **Dependencies** — external and sibling systems you rely on. Each is a risk for the section
+    below.
+11. **Monitoring** — the technical counterpart to success criteria, for health and stability.
+12. **New APIs or behaviors** — public-facing changes only. These need stakeholder buy-in.
+13. **Pros & cons** — of adopting *and* of not adopting. Development cost, maintenance burden,
     operational load, and whether this is a 1-way or 2-way door.
-13. **Major risks & mitigations** — dependencies outside your control, unfamiliar technology,
+14. **Major risks & mitigations** — dependencies outside your control, unfamiliar technology,
     unvalidated assumptions, and the technical debt you're taking on plus how you'll repay it.
-14. **Security** — surface area changes, new data gathered or stored and its blast radius,
+15. **Security** — surface area changes, new data gathered or stored and its blast radius,
     secure-by-default or not. Pairs with a separate security review.
-15. **Scope** — the minimum work that solves the use cases, including scale and SLA. Don't boil
+16. **Scope** — the minimum work that solves the use cases, including scale and SLA. Don't boil
     the ocean.
-16. **Out of scope** — incremental delivery and the corners you looked around but won't block on.
-17. **Alternatives considered** — each with pros & cons and reasons discarded. "Do nothing"
+17. **Out of scope** — incremental delivery and the corners you looked around but won't block on.
+18. **Alternatives considered** — each with pros & cons and reasons discarded. "Do nothing"
     **must** be addressed.
-18. **FAQ** — a smell; see below.
-19. **Open questions & feedback** — items from the design review.
-20. **Appendix** — methodology, sources, prior art, attachments, and every graph.
+19. **FAQ** — a smell; see below.
+20. **Open questions & feedback** — items from the design review.
+21. **Appendix** — methodology, sources, prior art, attachments, and every graph.
 
 ## How to write one
 
@@ -82,7 +86,10 @@ reading order, but it is the order that keeps the doc honest:
    went from 1 user to 2.
 4. **Then proposed design (what) and technical design (how)**, kept separate on purpose. The
    proposed design should survive a change of implementation.
-5. **Then the adversarial sections** — breaking changes, pros & cons, risks, security,
+5. **Then the API & data schema**, written out in full. Reviewers argue with a field list; they
+   nod along to a paragraph describing one. A schema you can't write down yet is a design you
+   haven't finished.
+6. **Then the adversarial sections** — breaking changes, pros & cons, risks, security,
    alternatives. Write these as if a skeptical senior engineer wrote them, because one is about
    to read them.
 
@@ -101,6 +108,7 @@ Score against this and report what's missing, quoting the offending lines:
 - Is every claim a number, a date, or a percentage? Flag each weasel word.
 - Do success criteria have both relative and absolute values?
 - Are breaking changes listed, including the workarounds customers built that will now break?
+- Is every API field and schema column typed, with nullability and defaults stated?
 - Is "do nothing" addressed in alternatives considered? It **must** be.
 - Is each decision marked as a 1-way or 2-way door?
 - Are bullet points doing work that prose should do?

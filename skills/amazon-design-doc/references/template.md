@@ -46,6 +46,15 @@ The key features live here; the mechanism lives in the next section.
 happy path; include edge cases only when they shape the design. Link to the original source of
 every diagram — you will want to edit it again.
 
+## API & data schema
+
+The contracts, written out rather than described. For each endpoint, message, or function: the
+request and response shape with types, which fields are optional or nullable, and what the error
+responses are. For each entity you persist: fields and types, primary and foreign keys, indexes,
+and retention. Then say how both evolve — how the API is versioned, and how the schema migrates
+without downtime. Anything a caller or a table can depend on belongs here; how it is announced to
+customers belongs in *New APIs or behaviors* below.
+
 ## Components
 
 Enumerate the humans, systems, processes, and components interacting here, C4-model style. Name

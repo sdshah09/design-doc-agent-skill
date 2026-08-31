@@ -62,6 +62,39 @@ Each line has a direction and a before/after:
 "Doubling customers" sounds huge until you find out it's from 1 to 2. That is why the absolute
 number is mandatory alongside the relative one.
 
+## API & data schema
+
+> ### API
+>
+> `POST /auth/federated-sign-in`
+>
+> | Field | Type | Required | Notes |
+> | --- | --- | --- | --- |
+> | `provider` | `'google' \| 'facebook' \| 'apple'` | yes | Rejected with `400 unsupported_provider` if the pool has the provider disabled. |
+> | `redirectUri` | `string` | yes | Must exactly match one entry in the pool's callback list. |
+> | `state` | `string` | no | Echoed back on the callback. Defaults to a generated 32-byte value. |
+>
+> Returns `302` to the provider. Errors return `400` with `{ code, message }`; `code` is stable and
+> safe to branch on, `message` is not.
+>
+> ### Schema
+>
+> `federated_identity` — one row per (user, provider) pair.
+>
+> | Column | Type | Null | Notes |
+> | --- | --- | --- | --- |
+> | `user_id` | `uuid` | no | FK to `user.id`, cascade delete. |
+> | `provider` | `text` | no | PK with `user_id`. |
+> | `provider_user_id` | `text` | no | Unique with `provider`. Never logged. |
+> | `linked_at` | `timestamptz` | no | Defaults to `now()`. |
+>
+> Migration adds the table and backfills nothing — existing users link on next sign-in. The old
+> `user.google_id` column stays and is written to for one release, then dropped in v3, so a
+> rollback within that window loses no data.
+
+Types and nullability are the point. A reviewer can argue with `state` being optional; nobody can
+argue with "the endpoint accepts the usual OAuth parameters".
+
 ## Components
 
 > - ***Studio*** — The primary interface for UX Designers. It consumes UI Codegen as a dependency.
